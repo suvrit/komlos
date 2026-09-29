@@ -94,6 +94,21 @@ assumption, and raises an exception instead of returning an uncertified
 signing. Installing the exact finite construction as its fallback is the first
 item in `OPEN_PROBLEMS.md`.
 
+## Citation
+
+If you find this repository useful, please cite the paper:
+
+```bibtex
+@misc{akbas2026komlos,
+  title         = {Tighter bounds on {K}oml{\'o}s discrepancy: existence and algorithmic results},
+  author        = {Akbas, Emrullah and Sra, Suvrit},
+  year          = {2026},
+  eprint        = {2609.27172},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2609.27172}
+}
+```
+
 ## License
 
 Copyright 2026 Emrullah Akbas and Suvrit Sra.
