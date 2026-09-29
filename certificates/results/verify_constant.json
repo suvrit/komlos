@@ -1,0 +1,43 @@
+{
+  "all_exact_assertions_passed": true,
+  "parameter_fractions": {
+    "R": "7139/5000",
+    "d": "52/173",
+    "Delta": "2704/29929",
+    "c": "2/3",
+    "beta": "17/25",
+    "A0": "25/4",
+    "B0": "7463/10000",
+    "a0": "5389/2500",
+    "b": "341613/42500",
+    "H0": "94893/5000",
+    "spectral_witness_cut": "18/25",
+    "spectral_true_cut": "3/4",
+    "rounding_weight": "19/6",
+    "tangent": "1/4",
+    "joint_rho_coefficient": "25/23",
+    "joint_trace_coefficient": "32/23"
+  },
+  "terminal_cutoff": 336,
+  "profile_max_interval": [
+    2.1555747867187396,
+    2.1555747867187396
+  ],
+  "initialization_exponent": 2.1070784950273147,
+  "initialization_taylor_relative_margin": 0.000992324074770956,
+  "joint_large_spectral_trace_fraction": 0.09034715493334225,
+  "deposit_joint_coefficient": 0.9998923998776472,
+  "joint_spectral_inertia_fraction": 0.4589499496634789,
+  "joint_protected_fraction": 0.041665440462051166,
+  "protected_coefficient": 0.16174079806701572,
+  "dimension_fraction_after_all_screening_budgets": 0.002576002920216151,
+  "required_dimension_fraction": 0.0025,
+  "terminal_discrepancy_squared": 1400,
+  "terminal_movement_squared": "8400/19",
+  "terminal_movement_reserve": 21.03795294117647,
+  "deletion_allowance": "92807/5000",
+  "discrepancy_constant_exact": "1877/50",
+  "discrepancy_constant": 37.54,
+  "harmless_row_l1_threshold": 37,
+  "scope": "Scalar hypotheses certified; requires the proved generalized joint-inertia, fully joint protected/large-row charge, and finite-walk lemmas."
+}

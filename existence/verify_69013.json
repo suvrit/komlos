@@ -1,0 +1,13 @@
+{
+  "constant": "69013/10000",
+  "constant_decimal": 6.9013,
+  "G_squared_upper_decimal": 0.9999896070866807,
+  "certified_rational_majorant": "99999/100000",
+  "critical_C_exact_bracket": [
+    "34506287/5000000",
+    "2760503/400000"
+  ],
+  "pi_machin_terms": 80,
+  "exponential_upper_degree": 20,
+  "status": "PASS: exact rational arithmetic proves G(pi/C)^2 < 99999/100000 < 1"
+}

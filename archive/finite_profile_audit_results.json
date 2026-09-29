@@ -1,0 +1,30 @@
+{
+  "all_checks_passed": true,
+  "precision_digits": 140,
+  "cases": [
+    {
+      "small_parameter": "1e-3",
+      "perron_gap": "0.00346038341702",
+      "minimum_perron_coordinate": "0.00254624210627",
+      "tested_signed_steps": 6,
+      "worst_temple_ratio": "1.88277287367e-11",
+      "worst_positive_remainder_ratio": "9.60134095278e-12"
+    },
+    {
+      "small_parameter": "1e-9",
+      "perron_gap": "3.46721118519e-9",
+      "minimum_perron_coordinate": "2.55006091894e-9",
+      "tested_signed_steps": 6,
+      "worst_temple_ratio": "7.01550957593e-11",
+      "worst_positive_remainder_ratio": "0.0"
+    },
+    {
+      "small_parameter": "1e-24",
+      "perron_gap": "3.46721119201e-24",
+      "minimum_perron_coordinate": "2.55006092274e-24",
+      "tested_signed_steps": 6,
+      "worst_temple_ratio": "7.01551625451e-11",
+      "worst_positive_remainder_ratio": "1.05232672497e-16"
+    }
+  ]
+}

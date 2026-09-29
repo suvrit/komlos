@@ -1,0 +1,29 @@
+{
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "platform": "macOS-15.3.1-arm64-arm-64bit",
+  "variants": [
+    "quadratic-gsw",
+    "quadratic-ce336",
+    "below67-ce336",
+    "final37",
+    "final37-screened",
+    "final37-gsw",
+    "verified-fast"
+  ],
+  "environment": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1"
+  },
+  "timing": "constructor, proposals/walk/rounding, and outward interval verification",
+  "source_sha256": {
+    "clw2.py": "f71ff934e1bd1c09d200ac2f01c6b1911fdf79ce3f6b530c601fbe280c3d7a4c",
+    "clw_gsw.py": "5cadc7bc4acc40f6abdac0b90eafdf13e087cb581580fc9e31f8f09bdbc921c2",
+    "profiles.py": "8ca43f024bdace001085c3372a68ffc01eea0f3a6f7121b2cb21e2ce2d048c70",
+    "final_walk.py": "05b411980f9c1975b8699327eb94f1116e9f132a9a89b0e0624b5f47543b78e9",
+    "verified_signing.py": "abca8d376e5969b0acd1e59f75485af501cc42875739e766d8774580a4ccde2e",
+    "instances.py": "d6c6e8db2eb518666790ac26a4e0a78e513abe3388e1f333450326ad993f1299",
+    "compare_final.py": "fe6c2f0dff3a3be734f7c650cd368e5673f075f742641926b4c764940014edc5"
+  },
+  "source_sha256_note": "compare_final.py was edited after these runs in its module docstring only; its SHA-256 at run time was fbdaa09e2e217d612415c57d3deb6d8a3017446d144b9a8e6b8c5df58176f293"
+}

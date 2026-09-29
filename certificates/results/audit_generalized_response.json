@@ -1,0 +1,9 @@
+{
+  "generalized_response_identity_checks": 480,
+  "largest_relative_identity_error": 3.800039187883767e-15,
+  "finite_generalized_curve_checks": 320,
+  "maximum_response_norm_to_proved_bound": 0.010338137291608372,
+  "maximum_relative_response_to_proved_bound": 0.002368877109731318,
+  "exact_large_row_cancellation_checks": 18,
+  "all_checks_passed": true
+}

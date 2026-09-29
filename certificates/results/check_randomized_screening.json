@@ -1,0 +1,10 @@
+{
+  "all_checks_passed": true,
+  "rademacher_directions": 32,
+  "accepted_directions": 16,
+  "acceptance_probability": "1/2",
+  "conditional_covariance_psd_check": "exact rational elimination",
+  "unbiased_boundary_energy_checks": 9,
+  "clock_renewals": 37,
+  "scope": "Cubic row processing and screening only; dense direction construction remains quartic overall."
+}

@@ -1,0 +1,1292 @@
+\documentclass[11pt]{amsart}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,booktabs,array}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\T}{\mathsf T}
+\newcommand{\calU}{\mathcal U}
+\newcommand{\calD}{\mathcal D}
+\title[Constructive Koml\'os discrepancy below 67]{Constructive Koml\'os discrepancy below 67:\newline coupled spectral signing with input-linear row processing}
+\author{}
+\date{27 September 2026; revised complexity analysis}
+\begin{document}
+\begin{abstract}
+We modify the deterministic retained-row spectral walk of the project
+draft~\cite{project}. The discrepancy bound becomes
+$1271/25+(149/100)\sqrt{117}=66.95681420\ldots<67$.
+The changes are a coupled Gram--resolvent estimate, a nonquadratic concave
+coordinate profile, and polynomial-time terminal rounding that uses each
+row's unspent deletion allowance. The profile minimizes its height subject
+to the particular pointwise gradient--curvature condition used in this
+proof. We extend the finite Perron comparison to its $C^{2,1}$ weight
+curves and retain $O(n\log^4(2+n))$ updates.
+Combining this walk with Li's row screening and motion clock gives
+$O(mn)+\widetilde O(n^4)$ deterministic field operations.
+The sharper fast-arithmetic bound is
+$O(mn)+\widetilde O(m_0n^2+n^{\omega+1})$, where
+$m_0< n^2/66^2$ is the number of rows surviving a single input scan.
+The fast version uses the draft's imported linear-algebra primitives and
+square roots. No polynomial bit-complexity or practical runtime claim is made.
+\end{abstract}
+\maketitle
+
+\section{Result and the source of the improvement}
+
+\begin{theorem}\label{thm:main}
+Let $A\in\R^{m\times n}$, $n\ge1$, satisfy $\sum_i a_{ij}^2\le1$ for every column.
+There is a deterministic algorithm that returns one sign per original
+column, $\eps\in\{-1,1\}^n$, with
+\[
+ \|A\eps\|_\infty<C_*:=\frac{1271}{25}+\frac{149}{100}\sqrt{117}
+ =66.956814201324\ldots<67.
+\]
+Let $m_0=|\{i:\sum_j|a_{ij}|>66\}|<n^2/66^2$.
+Put $J=1+\lceil\log_2 n\rceil$ and
+$q=\lceil\log_2(8(n+2m_0))\rceil$ for $n\ge1$.
+The algorithm uses $O(nJ^2q^2)=O(n\log^4(2+n))$ updates and
+$O(mn)+\widetilde O(n^4)$ field operations and comparisons.
+Its states are rational for rational input. With the fast symmetric
+diagonalization and exact rank primitives specified in the source draft,
+and allowing square roots, its cost is
+\begin{equation}\label{eq:screenedmaincost}
+ O(mn)+\widetilde O(m_0n^2+n^{\omega+1}).
+\end{equation}
+All logarithms hidden by $\widetilde O$ depend only on $2+n$.
+\end{theorem}
+
+The underlying retained-row walk, affine offsets, row deletion, restricted
+trace argument, exact constraint projection, deterministic flattening,
+and phase regularization are those of the project draft~\cite{project},
+whose deterministic core is also recorded in~\cite{core}. The coupled
+Gram--resolvent inequality used below appears as Lemma 2.4 of Li~\cite{Li};
+we include its elementary proof. The new ingredients here are its joint
+use with the profile in Section~\ref{sec:profile}, the remaining-mass
+rounding argument, and the checks that make the altered walk finite.
+We make no priority claim for the elementary spectral inequality.
+
+The complexity refinement in Section~\ref{sec:screening} borrows Li's
+warm/cold screening, motion clock, and aggregate statistics, including
+their elementary identities. In place of his quadratic potential charge,
+we control row energy directly by two additional direction constraints.
+The further work is to fit the screening into the below-$67$ walk without
+spending its discrepancy allowance, handle unflattened cold derivatives,
+and bound the clock using the nearly linear update count. The resulting support
+maintenance cost is $O(m_0n^2)$ and the remaining fast work is
+$\widetilde O(n^{\omega+1})$.
+
+Sections~\ref{sec:profile}--\ref{sec:arithmetic} give the unscreened core
+and its correctness proof. Section~\ref{sec:screening} specifies the
+screened implementation proving the improved running time in
+Theorem~\ref{thm:main}. Preprocessing discards rows of $\ell_1$ norm at
+most 66. In all walk formulas below, row indices refer only to the surviving
+matrix; any row-count variable $m$ in a core cost is consequently $m_0$.
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Proof contribution & Previous deterministic core & This supplement\\
+\midrule
+Tracked-row height & $75$ & $34.45$\\
+Total deletion allowance & $59.849623\ldots$ & $32.506814\ldots$\\
+Resulting bound & $134.849623\ldots<135$ & $66.956814\ldots<67$\\
+Terminal rule & nearest signs, $s\le99$ & conditional expectation, $s\le512$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The separate cosine-translation overlap theorem in the project's existence
+work does not by itself give polynomial-time access to signing directions.
+There is no such transfer in this proof. Here a sharp local
+gradient--curvature relation makes the directions computable within the
+spectral walk. The theorem is an arithmetic-operation statement; it does
+not establish bounded bit lengths or an efficient numerical implementation.
+
+\section{A profile matched to the curvature estimate}\label{sec:profile}
+
+Set
+\[
+ d=\frac2{11},\qquad c=\frac{17}{25},\qquad
+ f(x)=\frac{275}{34}\log\frac{25-17|x|}{8}
+                 +\frac{11}{2}(|x|-1),\quad -1\le x\le1.
+\]
+The function is even, nonnegative and concave, vanishes at $\pm1$, and is
+$C^2$ with Lipschitz second derivative. In particular,
+\begin{align}\label{eq:fderivatives}
+ f'(x)&=-\frac{187x}{2(25-17|x|)},&
+ -f''(x)&=\frac{4675}{2(25-17|x|)^2},\notag\\
+ \|f'\|_\infty&=\frac{187}{16},&
+ \|f''\|_\infty&=\frac{4675}{128},&
+ \|f'''\|_{\infty,\mathrm{a.e.}}&=\frac{79475}{512}.
+\end{align}
+At zero the formula for $f''$ is interpreted continuously. Its maximum is
+\[
+ f(0)=3.716012584611\ldots<a_0:=\frac{93}{25}.
+\]
+Most importantly,
+\begin{equation}\label{eq:exactratio}
+ \frac{(1+d|f'(x)|)^2}{-f''(x)}=\frac dc=\frac{50}{187}.
+\end{equation}
+Consequently, if $z=t^2\le d^2$, then for either sign $\sigma$,
+\begin{equation}\label{eq:pointwise}
+ (\sigma t+z f'(x))^2
+ \le z(1+d|f'(x)|)^2
+ =\frac{50}{187}\,z(-f''(x)).
+\end{equation}
+
+\begin{proposition}[Optimality within the pointwise profile condition]
+Fix $d>0$ and $\lambda>d$. Among even, differentiable concave functions
+$F$ with $F(1)=0$ satisfying
+$(1+d|F'|)^2\le\lambda(-F'')$, the smallest possible value of $F(0)$ is
+attained by
+\[
+ F(x)=\frac1d\left[\frac1c\log\frac{1-c|x|}{1-c}+|x|-1\right],
+ \qquad c=d/\lambda.
+\]
+The derivatives may be understood almost everywhere, provided $F'$ is
+locally absolutely continuous. This is optimality for this specified
+condition, not a global optimum over signing algorithms.
+\end{proposition}
+\begin{proof}
+On $[0,1]$ put $g=-F'\ge0$, so $g(0)=0$. The hypothesis gives
+$g'\ge(1+dg)^2/\lambda$. Hence
+$(1+dg(x))^{-1}\le1-dx/\lambda$, and
+$g(x)\ge x/(\lambda-dx)$.
+Integrating $F(0)=\int_0^1g(x)\,dx$ gives the displayed profile's height.
+Equality solves this differential equation. A finite height is impossible
+under this condition when $\lambda\le d$.
+\end{proof}
+
+\section{State, parameters, and cleanup}\label{sec:state}
+
+The constants used throughout are
+\begin{equation}\label{eq:parameters}
+\begin{gathered}
+ R=\frac{149}{100},\quad \Delta=d^2=\frac4{121},\quad
+ \beta=\frac45,\quad a_0=\frac{93}{25},\quad b=\frac{218}{25},\quad
+ H_0=\frac{689}{20},\\
+ A_0=36,\quad B_0=\frac4{625},\quad
+ \theta=\frac{1001}{1000},\quad L_* =\frac{257}{256},\quad
+ \kappa=\frac{47}{200},\quad \alpha=\frac{59}{250}.
+\end{gathered}
+\end{equation}
+Start at $x=0\in[-1,1]^n$. Let $V$ be the active coordinates, $s=|V|$.
+Row $i$ retains a set $T_i\subseteq V$ and an offset $c_i$; initially
+$T_i=V$ and $c_i=0$. Write
+\[
+ b_{ij}=a_{ij}\one_{j\in T_i},\quad p_{ij}=b_{ij}^2,\quad
+ q_i=\sum_jp_{ij},\quad d_i=c_i+b_i^\T x_V,\quad
+ E_i=\sum_jp_{ij}f(x_j).
+\]
+Removing a retained coefficient transfers $a_{ij}x_j$ to $c_i$, preserving
+$d_i$. We always have $0\le E_i\le a_0q_i$ and $\sum_iq_i\le s$.
+A row is large if $q_i>R^2$, medium if $0<q_i\le R^2$, and completed if
+$q_i=0$. Large rows impose $b_i^\T h=0$ and undergo no deliberate deletion.
+On medium rows delete entries with $p_{ij}>\Delta q_i$, one at a time,
+updating $q_i$ and choosing the least eligible pair. Thus a cleaned medium
+row has $\max_jp_{ij}\le\Delta q_i$.
+
+A nonempty medium row has a nonincreasing rational scale with
+$q_i\le r_i^2<\theta^2q_i$ and $r_i\le R$. Compute a candidate
+$\theta^\ell\max_{j\in T_i}|a_{ij}|$, using the least nonnegative integer
+$\ell$ whose square is at least $q_i$, and take the minimum of this
+candidate, $R$, and the previous scale if present. This requires
+$O(\log(2+n))$ operations, with an absolute constant depending on $\theta$.
+
+For medium row-sign pairs set
+\begin{equation}\label{eq:barrier}
+ u_{i\sigma}=\frac{\sigma d_i-H_0}{r_i}+\frac{E_i}{r_i^2}+b,
+ \qquad w_{i\sigma}=A_0r_i^{-4}e^{\beta u_{i\sigma}}.
+\end{equation}
+The invariants are $u_{i\sigma}\le0$, $d_i=0$ on large rows, and
+$L<L_*$. Here
+\begin{equation}\label{eq:matrix}
+ W=\sum_{i,\sigma}w_{i\sigma}p_ip_i^\T,\quad
+ B=B_0\sum_{i\text{ large}}\diag(p_i),\quad
+ M=W+B+\eta\one\one^\T,\quad L=\lambda_{\max}(M).
+\end{equation}
+For an empty active set set $L=0$. During a phase the potential is
+\[
+ \Phi=(L-1)_+^3-\eta\|x\|_2^2,
+\]
+where the norm includes frozen coordinates.
+
+Cleanup freezes boundary coordinates, absorbs their retained contributions,
+introduces newly medium rows, performs deliberate medium deletions, and
+decreases scales. Row classes can only decrease.
+
+\begin{lemma}\label{lem:cleanup}
+Cleanup preserves tracked sums, does not increase $L$ or $\Phi$, and
+preserves feasible barriers. Initialization has
+$L\le B_0+\eta n<1$ when $\eta n\le2^{-40}$.
+\end{lemma}
+\begin{proof}
+A newly medium row has $d_i=0$. At its entry scale $r\le R$,
+$u\le-H_0/r+a_0+b<-10$, and
+\[
+ 2r^2w\le\frac{72}{r^2}e^{\beta(-H_0/r+a_0+b)}<B_0.
+\]
+The right side before the last inequality is increasing up to $R$, since
+$\beta H_0/R>2$. At $R$ the inequality follows from
+\begin{equation}\label{eq:initcertificate}
+ \sum_{k=0}^{39}\frac{X^k}{k!}>\frac{72}{B_0R^2},
+ \qquad X=\beta(H_0/R-a_0-b)=8.544644295\ldots.
+\end{equation}
+All quantities in this finite check are rational. Because
+$pp^\T\preceq q\diag(p)$, a new medium row is covered in PSD order by
+its former large-row deposit.
+
+At fixed scale, deletion decreases $E$, $p$, $u$, and $w$, preserving $d$.
+For decreasing scale at fixed row data,
+\[
+ r\partial_r u=b-u-E/r^2,\qquad
+ r\partial_r\log w=\beta(b-u-E/r^2)-4.
+\]
+These are nonnegative as long as $u\le0$ and $r^2\ge q$, since
+$\beta(b-a_0)=4$. The conditions persist during the decrease. Existing
+medium Gram terms therefore decrease entrywise, which cannot increase the
+top eigenvalue of a nonnegative symmetric matrix. Freezing removes a
+principal submatrix; its removed energy terms vanish because $f(\pm1)=0$.
+The vector $x$ itself is unchanged by cleanup. The column norm condition
+and the deposit comparison give the initialization bound.
+\end{proof}
+
+\begin{lemma}[Tracking with the remaining mass retained]\label{lem:tracking}
+Put $A_\Delta=(1+\sqrt{1-\Delta})/\sqrt\Delta
+=(11+\sqrt{117})/2$.
+At any time after a row enters the medium class, its deliberately deleted
+absolute coefficient mass is at most
+$A_\Delta(R-\sqrt{q_i})$.
+For every later cube point $y$ agreeing with the frozen coordinates,
+\begin{equation}\label{eq:tracking}
+ (Ay)_i-\bigl(c_i+b_i^\T y_V\bigr)
+ =\sum_{j\in D_i}a_{ij}(y_j-x_j^{\rm del}).
+\end{equation}
+\end{lemma}
+\begin{proof}
+At a deliberate deletion, $a^2>\Delta q$ and
+\[
+ \frac{|a|}{\sqrt q-\sqrt{q-a^2}}
+ =\frac{\sqrt q+\sqrt{q-a^2}}{|a|}<A_\Delta.
+\]
+Sum these decreases of $\sqrt q$. Freezing only decreases $q$ further,
+so the sum is at most $R-\sqrt{q_i}$. Offsets preserve the current tracked
+sum at each removal. Telescoping the affine changes gives
+\eqref{eq:tracking}; frozen removals make zero later contribution.
+\end{proof}
+
+\section{The coupled estimate and the dimension budget}\label{sec:coupling}
+
+Put $z_i=p_i/r_i^2$ and $a_{i\sigma}=A_0e^{\beta u_{i\sigma}}$, so
+$W=\sum a_{i\sigma}z_iz_i^\T$ and $\sum_jz_{ij}\le1$.
+During differentiation retain the current row data and scales. Then
+\[
+ g_{i\sigma}=\nabla u_{i\sigma}
+ =\sigma b_i/r_i+z_i\circ f'(x),\qquad
+ \nabla^2u_{i\sigma}=\diag(z_i\circ f''(x)),\qquad
+ \|g_{i\sigma}\|\le25/8.
+\]
+The last inequality follows from $\|z_i\|\le d$ and
+$1+d\|f'\|_\infty=25/8$.
+
+The ridge makes the Perron eigenvalue simple with gap at least $\eta$:
+if $M_0=W+B$, a nonnegative unit top eigenvector $v_0$ has
+$\one^\T v_0\ge1$, so $L\ge\lambda_1(M_0)+\eta$; min--max on
+$\one^\perp$ gives $\lambda_2(M)\le\lambda_1(M_0)$.
+Let $v>0$ be the unit Perron vector. Define
+\begin{align}\label{eq:UD}
+ \calU&=\sum_{i,\sigma}a_{i\sigma}\beta^2(z_i^\T v)^2
+                                  g_{i\sigma}g_{i\sigma}^\T,\notag\\
+ \calD&=\sum_{i,\sigma}a_{i\sigma}\beta(z_i^\T v)^2
+                    \diag(z_i\circ(-f''(x))).
+\end{align}
+By \eqref{eq:pointwise},
+\begin{equation}\label{eq:rho}
+ \calU_{jj}\le\rho\calD_{jj},\qquad \rho=\frac{40}{187}.
+\end{equation}
+
+\begin{lemma}[Coupled low-spectrum response]\label{lem:coupled}
+If $CC^\T\preceq M$, and $R_\alpha$ is the reduced resolvent of $M$
+restricted to eigenvalues less than $\alpha L$, then
+\[
+ C^\T R_\alpha C\preceq\frac{\alpha}{1-\alpha}I.
+\]
+Consequently, writing $e_h=\|P_{[\alpha L,L]}M'[h]v\|$, the actual walk
+satisfies
+\begin{equation}\label{eq:curvature}
+ L''[h,h]\le h^\T(\gamma\calU-\calD)h+2e_h^2/\eta,
+ \qquad \gamma=\frac{1+\alpha}{1-\alpha}=\frac{309}{191}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The nonzero eigenvalues of $C^\T R_\alpha C$ equal those of
+$R_\alpha^{1/2}CC^\T R_\alpha^{1/2}$, which is bounded above by
+$R_\alpha^{1/2}MR_\alpha^{1/2}$. The latter has eigenvalues
+$\lambda/(L-\lambda)<\alpha/(1-\alpha)$ on its support.
+For the application let $C$ have columns $\sqrt{a_{i\sigma}}z_i$.
+Then $M'[h]v=C\ell$, where
+$\ell_{i\sigma}=\sqrt{a_{i\sigma}}\beta(z_i^\T v)g_{i\sigma}^\T h$,
+and $\|\ell\|^2=h^\T\calU h$.
+Also $v^\T M''[h,h]v=h^\T(\calU-\calD)h$.
+Use the simple-eigenvalue second derivative formula, the displayed bound
+on the low subspace, and the gap $\eta$ on the high subspace.
+\end{proof}
+
+For $S\succeq0$ and nonnegative diagonal $D$, the condition
+$S_{jj}\le rD_{jj}$ implies that $S-D$ has fewer than $rs$ positive
+eigenvalues, or none. Indeed, zero diagonal entries of $D$ annihilate the
+corresponding rows of $S$; on the remaining support
+$\tr(D^{-1/2}SD^{-1/2})\le rs$. Each eigenvalue above one uses more than
+one unit of trace. This inertia estimate also holds after restriction to
+any subspace.
+
+There are fewer than $s/R^2$ large rows. Compute each barrier with absolute
+error at most $1/1000$, and protect it if the computed value is at least
+$-1/200$, imposing the exact equation $g_{i\sigma}^\T h=0$.
+A protected pair has true $u\ge-1/100$, and therefore contributes at least
+$A_0\theta^{-4}e^{-\beta/100}$ to $\one^\T W\one\le Ls$.
+The number of protected pairs is at most
+\begin{equation}\label{eq:protectedcount}
+ \frac{L_*\theta^4}{36(1-\beta/100)}s.
+\end{equation}
+We used $e^t\le(1-t)^{-1}$ for $0\le t<1$.
+Diffuseness also gives
+\begin{equation}\label{eq:trace}
+ \tr M\le(\Delta L+B_0+\eta)s,
+\end{equation}
+because $\|p_i\|^2\le\Delta q_i^2$ and
+$\sum w_{i\sigma}q_i^2=\one^\T W\one\le Ls$.
+
+Here is the full numerical slack, expressed through rational quantities.
+Let $\ell_0=999999/1000000$. For $s\ge513$,
+\begin{align}\label{eq:dimensioncertificate}
+ 1-\frac1{R^2}
+ -\frac{L_*\theta^4}{36(1-\beta/100)}
+ -\frac{\Delta+B_0/\ell_0}{\kappa}
+ -\frac1{10000}
+ -\frac{12360}{35717}-\frac1{513}
+ &>\frac1{200}.
+\end{align}
+The left side is $0.00533725675760\ldots$.
+The terms account for large rows, protected pairs, spectral cancellation,
+numerical slack, positive curvature directions, and $x_V^\T h=0$,
+respectively. The verifier checks this inequality with rational arithmetic.
+
+\section{Computing an exactly feasible negative subspace}\label{sec:finite}
+
+At phase start, with $S$ active coordinates, set
+\begin{equation}\label{eq:precision}
+ \eta=\frac1{2^{40}JS},\qquad \delta=\frac{\eta^5}{2^{100}}.
+\end{equation}
+Keep these fixed until at most $S/2$ coordinates remain. The active range
+for this section is $s\ge513$.
+
+Use the following finite symmetric-diagonalization interface: for a
+bounded-norm symmetric $H$ and tolerance $\xi$, return a diagonal $D$ and
+a matrix $V$ with an orthogonal analysis witness $U$ such that
+\begin{equation}\label{eq:interface}
+ \|V-U\|\le\xi,\qquad \|H-UDU^\T\|\le\xi.
+\end{equation}
+Rational Jacobi rotations implement it with $V=U$ in
+$\widetilde O(s^3)$ field operations; the fast interface from the source
+draft costs $\widetilde O(s^\omega)$ and permits square roots. Matrix norms
+up to 16 are handled by scaling. Details of the arithmetic requirements
+are collected in Section~\ref{sec:arithmetic}.
+
+Approximate the nonnegative normalized weights by
+$\bar a_{i\sigma}\ge0$ with
+$\sum|\bar a_{i\sigma}-a_{i\sigma}|\le\delta/2^{20}$.
+Form $\bar M$, its analytical derivative map $\bar M'[h]$, and apply
+\eqref{eq:interface} with tolerance $\delta/2^{20}$. Clip reported negative
+eigenvalues to zero. The resulting witness obeys
+$\|M-UDU^\T\|<\delta$ and $\tr D\le\tr M+s\delta$.
+Let $d_* =\max D_{jj}$ and let $w$ be the unit normalization of its
+corresponding column of $V$, with fixed tie breaking. In rational Jacobi
+the column already has unit length.
+
+If $d_*\le1-\delta$, then $L\le1$: use the common kernel of the large-row
+constraints, protected gradients, and $x_V^\T h=0$.
+Otherwise $L>1-2\delta>\ell_0$. Let $V_F$ contain the columns whose
+reported eigenvalues are at least $\kappa d_*$. Add the exact equations
+\begin{equation}\label{eq:cancellation}
+ V_F^\T\bar M'[h]w=0.
+\end{equation}
+Let $\mathcal H$ be the resulting exact kernel and $P$ its exact orthogonal
+projector. The number of cancellation equations divided by $s$ is at most
+\[
+ \frac{\Delta+(B_0+\eta+\delta)/\ell_0}
+      {\kappa(1-\delta/\ell_0)}
+ <\frac{\Delta+B_0/\ell_0}{\kappa}+\frac1{10000}.
+\]
+The last inequality holds even with $\eta$ replaced by $2^{-40}$ and
+$\delta$ replaced by $2^{-300}$, and is checked rationally.
+
+\begin{lemma}[Numerical leakage and curvature]\label{lem:leakage}
+In the high branch, orient $w$ for analysis so that
+$\|w-v\|\le3\delta/\eta$, with $v>0$.
+This orientation changes neither the equations nor the proxy.
+Every $h\in\mathcal H$ satisfies
+\begin{equation}\label{eq:leakage}
+ \|P_{[\alpha L,L]}M'[h]v\|,\ |L'[h]|
+ \le\frac{2^{20}\delta}{\eta}\|h\|.
+\end{equation}
+Define $\bar{\calU},\bar{\calD}$ by \eqref{eq:UD}, replacing weights by
+$\bar a$ and $v$ by $w$, and put $\bar C=\gamma\bar{\calU}-\bar{\calD}$.
+Then $\|\bar C\|<16$, its positive inertia is less than
+$(12360/35717)s$, and
+\[
+ \|\gamma\calU-\calD-\bar C\|\le2^{12}\delta/\eta.
+\]
+Every feasible $h$ with $h^\T\bar C h<\eta\|h\|^2$ obeys
+\begin{equation}\label{eq:potentialcurvature}
+ \Phi''[h,h]\le-\frac{19}{10}\eta\|h\|^2,
+ \qquad |\Phi'[h]|\le\frac{2^{20}\delta}{\eta}\|h\|.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The gap $\eta$ and the residual of the computed top column give the stated
+eigenvector estimate. Between true eigenvalues at least $\alpha L$ and
+witness eigenvalues below $\kappa d_*$, separation is at least
+$(\alpha-\kappa)L-\kappa\delta>1/2000$.
+The Sylvester equation for these two spectral blocks therefore gives
+$\|P_{[\alpha L,L]}U_{F^c}\|\le2000\delta$.
+Also $\|M'[h]\|\le(5/2)L\|h\|<3\|h\|$ and
+$\|\bar M'[h]-M'[h]\|\le(5/2)\delta\|h\|/2^{20}$.
+Replace $v$ by $w$, use \eqref{eq:cancellation}, and replace $V_F$ by
+$U_F$. These estimates yield \eqref{eq:leakage} with room to spare.
+
+The diagonal domination \eqref{eq:rho} holds for any vector $w$ and
+nonnegative weights, so the inertia statement is exact.
+The bounds $\beta\|g\|\le5/2$,
+$\beta\|f''\|_\infty\Delta<1$, and
+$\sum\bar a(z_i^\T w)^2\le L+\delta$ give $\|\bar C\|<16$.
+For the perturbation use
+\[
+ \sum a\left|(z_i^\T v)^2-(z_i^\T w)^2\right|
+ \le2L\|v-w\|.
+\]
+Each coefficient matrix in $\gamma\calU-\calD$ has norm less than 12;
+including the weight error proves the stated bound.
+
+Combine it with \eqref{eq:curvature} and \eqref{eq:leakage}. For
+$F(t)=(t-1)_+^3$, $F'(L)\le3/65536$ and $F''(L)\le3/128$ at admissible
+states. The second derivative is
+$F'(L)L''+F''(L)(L')^2-2\eta\|h\|^2$.
+Using \eqref{eq:precision} leaves the bound in
+\eqref{eq:potentialcurvature}. The first derivative of the quadratic
+energy is zero because $x_V^\T h=0$. When $L\le1$, the spectral first and
+second derivatives vanish.
+\end{proof}
+
+In the high branch form
+$Q_{\rm neg}=P(\bar C-\eta I)P+(I-P)$; in the low branch form
+$Q_{\rm neg}=-\eta P+(I-P)$.
+By \eqref{eq:dimensioncertificate}, $Q_{\rm neg}$ has more than $s/200$
+eigenvalues at most $-\eta$, and $\|Q_{\rm neg}\|<16$.
+Apply \eqref{eq:interface} with error $\xi=\eta/2^{20}$ and retain
+columns reported at most $-3\eta/4$, giving $V_-$ with $k>s/200$ columns.
+Set
+\begin{equation}\label{eq:basis}
+ Z=PV_-,\qquad T=Z/(1+\xi).
+\end{equation}
+Then $T$ is exactly feasible and
+$\frac34 I_k\preceq T^\T T\preceq I_k$.
+Indeed the orthogonal witness satisfies
+$(I-P)U_-(I-D_-)=(I-P)(Q_{\rm neg}-UDU^\T)U_-$,
+so $\|(I-P)U_-\|\le\xi$ and $\|Z-U_-\|\le2\xi$.
+The computed span is negative for $Q_{\rm neg}$: the error from replacing $U_-$ by
+$V_-$ is at most $34\xi<\eta/4$.
+Projection preserves negativity because
+\[
+ (Za)^\T(\bar C-\eta I)(Za)
+ =(V_-a)^\T Q_{\rm neg}(V_-a)-\|(I-P)V_-a\|^2<0.
+\]
+In the low branch all feasible vectors already have spectral curvature zero.
+
+\section{Flat directions and finite steps}\label{sec:steps}
+
+Apply the deterministic flattening construction to the test vectors
+$e_j$ and $(8/25)g_{i\sigma}$, each of norm at most one, and to the matrix
+$T$ from \eqref{eq:basis}. It returns a rational vector $h_0$ in its span
+with
+\[
+ \frac34\le\|h_0\|\le1,\qquad
+ |(h_0)_j|\le3\sqrt{q/k},\qquad
+ |g_{i\sigma}^\T h_0|\le\frac{75}{8}\sqrt{q/k}.
+\]
+Put $h=h_0/16$, so $1/32\le\|h\|\le1/16$.
+If $4q/k\ge1$ use $K=1$; otherwise halve from one until the next square
+would fall below $4q/k$. Then
+\begin{equation}\label{eq:flat}
+ |\beta g_{i\sigma}^\T h|\le K,\quad
+ 8\|h\|_\infty\le K,\quad
+ \eta\le K\le1,\quad K^2\le\min(1,3200q/s).
+\end{equation}
+The baseline inequalities when $K=1$ follow directly from $\|h\|\le1/16$.
+In the other case the displayed flat estimates suffice.
+Section~\ref{sec:arithmetic} records the finite conditional-expectation
+implementation, so no random or continuous oracle is used here.
+
+Along a cube-contained line $x+th$, write
+$w_{i\sigma}(t)=w_{i\sigma}(0)e^{\ell_{i\sigma}(t)}$.
+The derivative bounds \eqref{eq:fderivatives} and \eqref{eq:flat} imply
+\begin{equation}\label{eq:logcurve}
+ \ell(0)=0,\quad |\ell'(0)|\le K,\quad
+ -K^2/2\le\ell''(t)\le0,\quad
+ |\ell'''(t)|\le K^3/4\quad\text{a.e.}
+\end{equation}
+The last two assertions use $\sum z_{ij}\le1$ and
+$8\|h\|_\infty\le K$. They remain valid when coordinates cross zero.
+
+\begin{lemma}[Finite Perron comparison for $C^{2,1}$ curves]\label{lem:perron}
+Let $M(t)=B+\sum_r w_re^{\ell_r(t)}p_rp_r^\T$, with $B\succeq0$
+entrywise nonnegative, $p_r\ge0$, and $w_r\ge0$.
+Assume \eqref{eq:logcurve}, $K\le1$, and at zero assume
+$1/2\le L\le9/8$, gap at least $\zeta\in(0,1]$, and unit Perron vector
+$v>0$. Write $\nu=\min v_i$, $k_v=1+\log(1/\nu)$,
+$E=M'(0)$, and suppose
+\[
+ e:=\|P_{(L/4,L]}Ev\|\le K\zeta\nu/64.
+\]
+For $|t|\le\sqrt\zeta/(64Kk_v)$ within the available curve interval,
+\begin{equation}\label{eq:remainder}
+ \Phi(t)\le\Phi(0)+\Phi'(0)t+\tfrac12\Phi''(0)t^2
+             +128K^3|t|^3+4096K^4t^4/\zeta,
+\end{equation}
+where $\Phi=(\lambda_1(M)-1)_+^3$ minus any quadratic energy.
+\end{lemma}
+\begin{proof}
+The step restriction gives $K|t|\le1/64$. From \eqref{eq:logcurve} and the
+positive Gram representation,
+\[
+ |E_{ij}|\le KM(0)_{ij},\quad \|M''(t)\|\le6K^2,\quad
+ \|M'''(t)\|\le14K^3\quad\text{a.e.}
+\]
+Let $\alpha_0=v^\T Ev$, let $R_0$ be the reduced resolvent, and put
+$z=R_0(Ev-\alpha_0v)$.
+Splitting the forcing at $L/4$ gives $\|z\|\le2K$ and
+$|\alpha_0|\le e\le K/64$.
+For the low response use the series
+$L^{-1}\sum_{j\ge0}(M(0)/L)^j$ on the low space.
+Its $j$th component relative to $v_i$ is bounded both by $(33/32)K$
+(positivity applied to $Ev$, plus the small removed high part) and by
+$K4^{-j}/\nu$ (spectral decay). Summing the smaller bounds, and adding
+the high response $e/(\zeta\nu)$, gives
+\begin{equation}\label{eq:zbound}
+ |z_i|\le4Kk_vv_i.
+\end{equation}
+
+Put $A=LI-M(0)$, $Z=\diag(z_i/v_i)$, and $D=I+tZ$.
+Then $Az=Ev-\alpha_0v$ and
+\[
+ D((L+\alpha_0t)I-M(t))D=A+tG+R(t),\quad
+ G=ZA+AZ-E+\alpha_0I,
+\]
+where $Gv=0$ and $\|R(t)\|\le80K^2k_v^2t^2$.
+This follows by expanding, using $\|A\|\le2$,
+$\|E\|\le2K$, \eqref{eq:zbound}, and
+$\|M(t)-M(0)-tE\|\le6K^2t^2$.
+Off the diagonal $|G_{ij}|\le9Kk_vM(0)_{ij}$.
+For a symmetric matrix annihilating $v$, the identity
+\[
+ y^\T Gy=-\frac12\sum_{ij}G_{ij}v_iv_j
+                         (y_i/v_i-y_j/v_j)^2
+\]
+therefore implies $|y^\T Gy|\le9Kk_v y^\T Ay$.
+Since $\|D-I\|\le1/16$, min--max on $(Dv)^\perp$ gives
+\[
+ \lambda_2(M(t))\le L+\alpha_0t-\zeta/2.
+\]
+Explicitly, the lower bound for the complementary quadratic form is
+\[
+ \left[\frac{55}{64}\left(\frac{16}{17}\right)^2
+ -\frac{80}{4096}\left(\frac{16}{15}\right)^2\right]\zeta
+ >\zeta/2.
+\]
+
+The positive trial vector $\psi=v+tz$ has Rayleigh quotient $r(t)$.
+Its residual centered at $L+\alpha_0t$ is
+\[
+ (M(t)-(L+\alpha_0t)I)\psi
+ =t^2(E-\alpha_0I)z+(M(t)-M(0)-tE)\psi.
+\]
+Its normalized norm is at most $13K^2t^2$.
+Thus $|r-L-\alpha_0t|\le13K^2t^2$ and
+$r-\lambda_2(M(t))>\zeta/3$.
+The elementary Rayleigh residual (Temple) inequality gives
+\begin{equation}\label{eq:temple}
+ 0\le\lambda_1(M(t))-r(t)\le512K^4t^4/\zeta.
+\end{equation}
+
+Only a second-order Taylor expansion is needed for the $C^{2,1}$ curve.
+Put $N=M''(0)$; its remainder has norm at most
+$(14/6)K^3|t|^3$. Expand
+$(v+tz)^\T M(t)(v+tz)/(1+t^2\|z\|^2)$.
+The quadratic coefficient is $L''(0)/2$ because
+$z^\T M(0)z=L\|z\|^2-z^\T Ev$.
+The remaining cubic coefficient is bounded using
+$\|z\|\le2K$, $\|E\|\le2K$, $\|N\|\le6K^2$,
+and $|\alpha_0|\le K/64$; the quartic terms are absorbed using
+$K|t|\le1/64$. This gives explicitly
+\[
+ \left|r(t)-L-\alpha_0t-\tfrac12L''(0)t^2\right|
+ \le32K^3|t|^3.
+\]
+For completeness, the numerator's cubic terms have bound
+$(8+12+1/16)K^3$, its quartic terms have bound $40K^4$, and the
+normalized Taylor remainder has bound $(14/6)K^3|t|^3$.
+
+For $F(u)=(u-1)_+^3$, $F''$ is globally 6-Lipschitz, so its scalar
+second-order remainder is at most $|r-L|^3$.
+Use $|r-L-\alpha_0t|\le13K^2t^2$ and
+$|\alpha_0|\le K/64$ to get a bound of $128K^3|t|^3$ after composition.
+All arguments lie below two. Replacing $r$ by $\lambda_1$ using
+\eqref{eq:temple} costs at most $1536K^4t^4/\zeta$, which is smaller
+than the final allowance in \eqref{eq:remainder}. A quadratic energy
+contributes no remainder. The proof uses no fourth derivative.
+\end{proof}
+
+In the high branch, $Lv_i\ge\eta\sum_jv_j\ge\eta$, so
+$\nu\ge\eta/2$. Since $\alpha<1/4$, \eqref{eq:leakage} controls the
+high space in Lemma~\ref{lem:perron}.
+Equations \eqref{eq:precision} and \eqref{eq:flat} imply its leakage
+condition with $\zeta=\eta$.
+In the low branch $L\le1$, and the spectral potential after a short move
+is bounded directly by $64K^3|t|^3$; its first two derivatives at zero vanish.
+
+Set $c_*=2^{-40}$ and let $H=\lceil\log_2(4/\eta)\rceil$.
+Take the largest dyadic $\tau\le1$ satisfying
+\begin{equation}\label{eq:stepschedule}
+ \tau\le c_*,\qquad K^2\tau\le c_*\eta,\qquad
+ K^2H^2\tau^2\le c_*^2\eta.
+\end{equation}
+These are rational tests. We have $H\ge k_v$, $\eta H<1$,
+and $\tau\ge c_*\eta/(2H)$.
+The precision choice implies
+$|\Phi'[h]|\le\eta\tau/2^{16}$, and
+\eqref{eq:potentialcurvature} implies $\Phi''[h,h]\le-\eta/1024$.
+Lemma~\ref{lem:perron} applies on $|t|\le\tau$.
+Its remainder, divided by $\eta t^2$, is at most
+$128c_*+4096c_*^2<2^{-16}$.
+For either sign and a cube-contained move $0<t\le\tau$,
+\begin{equation}\label{eq:onestep}
+ \Phi(x\pm th)-\Phi(x)
+ \le\frac{\eta\tau t}{2^{16}}-\frac{\eta t^2}{2048}
+                              +\frac{\eta t^2}{2^{16}}.
+\end{equation}
+A full step decreases $\Phi$ by at least $\eta\tau^2/4096$.
+A shorter step increases it by at most $\eta\tau^2/2^{16}$.
+Protected barriers cannot increase because they are concave and tangent to
+$h$. Every unprotected barrier is below $-1/250$ and its increase is at
+most $\beta^{-1}K\tau<1/250$. Large rows remain zero.
+
+\section{The complete algorithm and its spectral budget}\label{sec:algorithm}
+
+All tie choices below are by least index, with the positive sign preferred.
+First perform the row preprocessing of Section~\ref{sec:screening}.
+For $n=0$ return the empty signing; if $m_0=0$, return all positive signs.
+For $1\le n\le512$ go directly to the
+terminal procedure of Section~\ref{sec:terminal} at $x=0$.
+Otherwise initialize the retained-row state and the first phase at $S=n$.
+Repeat:
+\begin{enumerate}
+\item Compute the approximate weights and protected pairs, the exactly
+feasible matrix $T$, the flat direction $h$, $K$, and $\tau$ as above.
+\item Let $t_*=\min_{h_j\ne0}(1-|x_j|)/|h_j|$ and
+$t=\min(t_*,\tau)$. If $t=\tau$, move by $+th$.
+If $t<\tau$, choose a coordinate attaining $t_*$ and choose the move sign
+so that this coordinate moves toward its nearer boundary (either sign if
+it is zero). Move $x_V\leftarrow x_V\pm th$.
+\item Perform cleanup. If $s\le512$, stop the walk. If $s\le S/2$, begin
+a new phase with $S=s$ and the new parameters \eqref{eq:precision}.
+\end{enumerate}
+Then perform terminal conditional-expectation rounding.
+Both signs of a move of size at most $t_*$ remain in the cube, and a short
+move freezes a coordinate. The algorithm never evaluates the true
+potential or an exact eigenvector.
+
+\begin{lemma}\label{lem:budget}
+All states obey $L<L_*$, and there are $O(nJ^2q^2)$ updates.
+\end{lemma}
+\begin{proof}
+Write $F=(L-1)_+^3$. Within a phase, at most $S$ short steps occur and
+the increase in $\|x\|^2$ is at most $S$. Equation~\eqref{eq:onestep}
+therefore bounds every phase prefix's increase in $F$ by
+$(1+2^{-16})\eta S=(1+2^{-16})/(2^{40}J)$.
+A reset changes $L$ by at most $(\eta'-\eta)S'\le1/(2^{40}J)$.
+If the preceding state has $L<L_*$, the tentative reset value is below
+$1+1/128$, where $F'<1$. Thus a reset increases $F$ by at most
+$1/(2^{40}J)$. There are at most $J$ phases and fewer than $J$ resets,
+so every prefix has
+\[
+ F<3\cdot2^{-40}<2^{-24}=(L_*-1)^3.
+\]
+This inductively proves the invariant. Equivalently, at a first putative
+crossing the local step bounds already give the same strict inequality,
+so the argument does not assume the next state's admissibility.
+
+During a phase $S/2<s\le S$. By \eqref{eq:flat},
+$\eta/K^2>1/D_*$, where $D_*=2^{41}\cdot3200Jq$.
+For $n\ge513$, $q\ge J$, $H\le6J$, and $D_*>H^2$.
+Thus the largest dyadic step satisfies $\tau\ge c_*/(2D_*)$.
+Every full displacement has norm at least $\tau/32=\Omega((Jq)^{-1})$.
+The exact constraint $x_V^\T h=0$ gives
+$\|x\pm th\|^2-\|x\|^2=t^2\|h\|^2$.
+The total increase is at most $n$, so only $O(nJ^2q^2)$ full updates occur.
+There are at most $n$ short updates. A phase beginning at size $S$ has
+$O(SJ^2q^2)$ updates by the same argument.
+\end{proof}
+
+\section{Terminal rounding from the remaining allowance}\label{sec:terminal}
+
+At $s\le512$, round active coordinates to signs with
+\begin{equation}\label{eq:terminalenergy}
+ \|A_V(\eps_V-x_V)\|_2^2+4\|\eps_V-x_V\|_2^2\le5s.
+\end{equation}
+This is deterministic polynomial-time conditional expectation.
+Independent signs with means $x_j$ have expected left side
+\[
+ \sum_{j\in V}(1-x_j^2)(\|A_{:j}\|_2^2+4)\le5s.
+\]
+Fix one sign at a time, selecting the smaller of its two conditional
+quadratic expectations; these are rational expressions in the current
+data. Maintaining the partial vector $A_V(\eps_V-x_V)$ gives $O(ms+s)$
+arithmetic work. In particular,
+\begin{equation}\label{eq:roundnorms}
+ \|A_V(\eps_V-x_V)\|_\infty\le\sqrt{2560},\qquad
+ \|\eps_V-x_V\|_2\le\sqrt{640}.
+\end{equation}
+
+A still-large row has actual current sum zero and has had no deliberate
+deletions. Its final discrepancy is at most $\sqrt{2560}<C_*$.
+For a medium row, its two barriers imply
+$|d_i|\le H_0-br_i\le H_0-b\sqrt{q_i}$.
+Lemma~\ref{lem:tracking} and Cauchy--Schwarz on its retained coefficients
+give
+\begin{align*}
+ |(A\eps)_i|
+ &\le H_0-b\sqrt{q_i}
+        +\sqrt{640}\sqrt{q_i}
+        +2A_\Delta(R-\sqrt{q_i})\\
+ &=H_0+2RA_\Delta
+       +\bigl(\sqrt{640}-b-2A_\Delta\bigr)\sqrt{q_i}
+ <H_0+2RA_\Delta.
+\end{align*}
+The last coefficient is negative because
+$b+2A_\Delta=30.536653826\ldots>\sqrt{640}$.
+A completed row has $|d_i|<H_0$ (or $d_i=0$ if it went directly from large
+to completed), and its deletion error is bounded by $2RA_\Delta$.
+If $n\le512$, apply \eqref{eq:terminalenergy} at zero; its discrepancy is
+at most $\sqrt{5n}\le\sqrt{2560}<C_*$.
+Finally,
+\[
+ H_0+2RA_\Delta=H_0+R(11+\sqrt{117})
+ =\frac{1271}{25}+\frac{149}{100}\sqrt{117}<67.
+\]
+The last inequality is certified without square-root approximation by
+$(67-1271/25)^2>117(149/100)^2$.
+This proves the discrepancy assertion of Theorem~\ref{thm:main}.
+
+\section{Finite arithmetic and implementation scope}\label{sec:arithmetic}
+
+\subsection{Profile and scalar evaluations}
+The row constraints use $f'$ and the proxy uses $f''$, both rational in
+rational $x$. Only weights and protected-pair decisions require values of
+$f$. For $z\in[1,25/8]$, let $t=(z-1)/(z+1)\in[0,17/33]$. Then
+\[
+ \log z=2\sum_{k=0}^{N-1}\frac{t^{2k+1}}{2k+1}+R_N,
+ \qquad 0\le R_N\le\frac{2t^{2N+1}}{(2N+1)(1-t^2)}.
+\]
+Thus $O(\log(1/\xi))$ rational operations give any absolute accuracy
+$\xi$. Compute the profile at each active coordinate, then form the row
+energies. Since $\sum_jz_{ij}\le1$, profile error is not magnified in
+$E_i/r_i^2$. The other term $(\sigma d_i-H_0)/r_i$ is exact arithmetic.
+Compute positive weight approximants with the total error required in
+Section~\ref{sec:finite}. Very negative exponentials can be set to zero
+after certifying that their weight is below the allocated error.
+For the rest, argument reduction and a positive Taylor series suffice.
+The needed precision logarithms are $O(\log(2+m+n))$. No logarithm or
+exponential oracle is assumed. Tiny scales cause no loss of the absolute
+weight accuracy because the matrix is formed with $a_{i\sigma}z_iz_i^\T$,
+not with unnormalized $r_i^{-4}$ coefficients.
+
+\subsection{An explicit field-operation diagonalization interface}
+For a symmetric matrix of bounded norm maintain an exactly orthogonal
+product of rational plane rotations. In a pivot block with diagonal
+$a,c$ and off-diagonal $b$, use
+$\cos t=(1-z^2)/(1+z^2)$ and $\sin t=2z/(1+z^2)$.
+The rotated off-diagonal numerator is
+$b(1-6z^2+z^4)+2z(1-z^2)(c-a)$.
+A zero lies between $0$ and
+$-\tfrac12\operatorname{sgn}(b(c-a))$; if $a=c$, use the endpoint $1/2$.
+Bisection reduces the pivot magnitude by at least a factor two.
+Choosing a largest pivot reduces squared off-diagonal Frobenius norm
+$E$ by at least $3E/(2s(s-1))$.
+After $O(s^2\log(s/\xi))$ rotations the off-diagonal norm is below $\xi$.
+A tournament structure updates the largest pivot in $O(s\log s)$ work
+per rotation. While termination is not yet reached, the pivot is at least
+an inverse-polynomial multiple of $\xi$, so its bisection takes
+$O(\log(s/\xi))$ iterations. This proves
+\eqref{eq:interface} in $\widetilde O(s^3)$ arithmetic operations.
+It also handles indefinite $Q_{\rm neg}$.
+
+Extract independent exact constraint rows into $E_0$ and form
+$P=I-E_0^\T(E_0E_0^\T)^{-1}E_0$; use $P=I$ if there are no rows.
+Exact elimination and projection cost $O(s^3)$. This model allows
+arbitrarily small nonzero pivots and makes no conditioning assumption.
+
+\subsection{Finite deterministic flattening}
+Here are details of the flattening step used above, to specify the
+algorithm without a probabilistic oracle. For unit-norm test vectors
+$a_1,\ldots,a_N$, write $c_{ij}=a_i^\T T e_j$; then
+$\sum_jc_{ij}^2\le1$.
+Let $\lambda$ be the least positive integer with $\lambda^2\ge q$.
+For uniform independent signs $\eps_j$,
+\[
+ \mathbb E\sum_i\cosh\!\left(\lambda\sum_jc_{ij}\eps_j\right)
+ \le N e^{\lambda^2/2}.
+\]
+Greedily fix each sign using positive relative approximations to the two
+conditional expectations. Taking scalar relative errors at most
+$1/(100k^2)$ makes each conditional expectation accurate within
+$1/(20k)$ and the accumulated multiplicative loss less than two.
+The resulting signs have
+$|\sum_jc_{ij}\eps_j|\le3\sqrt q$ for every $i$:
+use $\log(4N)+\lambda^2/2\le3q$ and $\lambda\ge\sqrt q$.
+Choose a positive dyadic rational $r_0$ with
+$3/4\le r_0^2k\le1$, by bisection, and put $h_0=r_0T\eps$.
+The Gram bounds on $T$ give $3/4\le\|h_0\|\le1$ and the claimed test bounds.
+The two conditional expectations are positive sums of products of
+$\cosh(\lambda c_{ij})$ and a current partial-sum factor.
+Suffix products and partial sums yield $O(Nk)$ scalar evaluations.
+Arguments have size at most $2\sqrt{qk}$; halving, Taylor approximation,
+and repeated squaring implement their relative approximants in
+$O(\log(2Nk))$ operations each.
+
+\subsection{Unscreened core cost and implementation scope}
+The per-state field-operation cost is
+$\widetilde O(ms^2+s^3+m)$, including Gram and proxy formation, both
+diagonalizations, exact kernel computation, and flattening.
+Each phase beginning at $S$ has $O(SJ^2q^2)$ updates.
+Summing the geometric phase sizes gives
+$\widetilde O(m_0n^3+n^4)$ after the $O(mn)$ input scan.
+The extra profile evaluations and terminal rounding fit within this bound.
+
+The source draft's fast diagonalization interface satisfies
+\eqref{eq:interface} with an orthogonal analysis witness, while fast exact
+rank computation constructs the same projector. Blocking rectangular
+products by $s$ rows makes Gram, proxy, cancellation, and flattening
+products cost $O(ms^{\omega-1}+s^\omega)$ per state.
+The same phase sum yields
+$\widetilde O(m_0n^\omega+n^{\omega+1})$ in that arithmetic model.
+This is the cost of evaluating every surviving row on every update.
+Section~\ref{sec:screening} removes that repeated cost and proves
+\eqref{eq:screenedmaincost}. Neither version analyzes the separate
+randomized and amortized refinements in the longer source draft.
+
+The step constants are deliberately conservative. This is a complete
+finite arithmetic algorithm and proof, with an executable exact parameter
+verifier, rather than a benchmarked end-to-end numerical solver. Exact
+rank computation may increase bit lengths; no polynomial bit bound is
+inferred from the arithmetic count. The separate existence bound near
+$6.9013$ remains substantially smaller than the constructive guarantee.
+
+\section{Certificates and reproducibility}
+
+The accompanying \texttt{verify\_constant67.py} uses only Python's standard
+library. It certifies the profile height by a rational logarithm enclosure,
+the initialization inequality by a finite positive Taylor sum,
+the entire dimension budget including numerical slack, the terminal
+rounding inequalities, and the finite-step coefficient bounds.
+It also verifies $C_*<67$ using a rational square comparison. Its decimal
+output is for readability; the assertions use exact fractions.
+The proof of the $C^{2,1}$ finite-step lemma is given above, including the
+zero-crossing case, and does not rest on a floating-point experiment.
+The optional \texttt{audit\_finite\_profile.py} additionally checks that
+lemma on noncommuting Gram curves crossing the third-derivative kink,
+with two nearly colliding leading eigenvalues and gaps down to order
+$10^{-24}$, using 140-digit arithmetic. Those checks are supporting audits,
+not substitutes for the proof or end-to-end solver tests.
+The additional standard-library script
+\texttt{verify\_screened\_complexity.py} (not included in this repository)
+certifies the screened dimension
+margin, checks the two aggregate statistics through signed
+coefficient deletion and freezing using exact fractions, and checks cold-row
+clock certificates through movement and support changes, and verifies
+the exact row-energy increment along doubly tangent directions. It also checks
+the screening precision schedule on several input sizes. These tests
+support the symbolic analysis below; they do not claim empirical runtime
+exponents.
+
+\section{Screening rows and the improved complexity}\label{sec:screening}
+
+This section proves the running time in Theorem~\ref{thm:main}.
+The signing bound and its constants are unchanged. The modifications are
+an initial row filter, direct row-energy control, two extra sets of direction
+constraints, and certified omission of very small Gram weights.
+
+\subsection{One scan removes the dependence on the original row count}
+A row with $\|a_i\|_1\le66$ is safe for every signing, because
+$|(A\eps)_i|\le66<C_*$. Retain just the other $m_0$ rows. For every
+survivor, Cauchy--Schwarz gives $\|a_i\|_2^2>66^2/n$; summing the column
+norm assumptions gives $\sum_i\|a_i\|_2^2\le n$. Thus
+\begin{equation}\label{eq:rowpreprocess}
+ m_0<n^2/66^2.
+\end{equation}
+The scan costs $O(mn)$ field operations and comparisons. The surviving
+matrix still has column norms at most one. Terminal rounding and all
+subsequent row operations use this matrix only; the omitted rows require
+no subsequent verification.
+
+This observation alone turns the unscreened fast bound into
+$O(mn)+\widetilde O(n^{\omega+2})$. Achieving the stronger
+\eqref{eq:screenedmaincost} requires the following changes.
+
+\subsection{Controlling row energy with the original potential}
+Let $\mathsf A$ be the matrix of current retained rows $b_i^\T$, and let
+$c$ be the vector of offsets, including completed rows. Define
+\[
+ Q=\mathsf A^\T\mathsf A,\qquad u=\mathsf A^\T c,\qquad
+ \mathcal E=\|c+\mathsf A x_V\|^2=\sum_i d_i^2.
+\]
+Then $\tr Q\le s$ and $\|Q\|\le s$.
+Keep the original potential $\Phi=(L-1)_+^3-\eta\|x\|^2$ and phase
+schedule. Write $\eta_0=1/(2^{40}Jn)$ for its minimum ridge parameter.
+At each direction computation impose, in addition to all earlier exact
+constraints,
+\begin{equation}\label{eq:chargegradient}
+ (Qx_V+u)^\T h=0.
+\end{equation}
+This makes the first derivative of $\mathcal E$ zero.
+
+Also apply the symmetric-diagonalization interface to $Q$, requesting
+original matrix and witness error at most $\xi_Q/4$, where
+$\xi_Q=1/(2^{20}(s+1))$. Its norm is handled by scaling by $s+1$.
+Clip negative reported eigenvalues to zero and impose $V_Q^\T h=0$ for
+the computed columns whose reported eigenvalues are at least 4095.
+Because $Q$ is PSD, every negative reported eigenvalue has magnitude at
+most $\xi_Q/4$. Clipping therefore leaves total matrix error below
+$\xi_Q$, while the witness error is also below $\xi_Q$. Thus the clipped trace
+is at most $s+s\xi_Q$. The number of new columns is less than $s/4094$.
+For every vector in their exact computed kernel,
+\begin{equation}\label{eq:chargequadratic}
+ h^\T Qh\le4096\|h\|^2.
+\end{equation}
+Indeed, its component along the corresponding orthogonal witness columns
+is at most $\xi_Q\|h\|$. On the complementary witness subspace the
+reported eigenvalues are below 4095; the true quadratic form is therefore
+at most $[4095+(s+\xi_Q)\xi_Q^2+\xi_Q]\|h\|^2<4096\|h\|^2$.
+
+The extra equation \eqref{eq:chargegradient} and these columns leave enough
+room in \eqref{eq:dimensioncertificate}. Let $d_{\rm core}$ denote the
+rational left side of that inequality. The exact certificate gives
+\begin{equation}\label{eq:chargeddimension}
+ d_{\rm core}-\frac1{513}-\frac1{4094}
+ =0.00314367912628\ldots>\frac1{400},
+\end{equation}
+where the decimal is reported only for readability.
+Construct the negative basis exactly as before, using this smaller exact
+kernel. It now has $k>s/400$ columns. The same deterministic flattening
+and normalization give
+\begin{equation}\label{eq:screenedflat}
+ \frac1{32}\le\|h\|\le\frac1{16},\qquad
+ K^2\le\min(1,6400q/s).
+\end{equation}
+Only the test forms specified below need to be flattened.
+
+No new curvature term is added to the potential, so the earlier
+$-(19/10)\eta\|h\|^2$ margin is unchanged. The point of the new
+constraints is the exact increment identity
+\begin{align}\label{eq:rowenergyincrement}
+ \mathcal E(x+th)-\mathcal E(x)
+ &=t^2h^\T Qh\notag\\
+ &\le4096t^2\|h\|^2
+ =4096\bigl(\|x+th\|^2-\|x\|^2\bigr).
+\end{align}
+The first equality uses \eqref{eq:chargegradient}; the last uses the
+original exact constraint $x_V^\T h=0$.
+Both identities hold for either move sign. Initially $d=0$ and $x=0$,
+and cleanup preserves every $d_i$ and the full vector $x$. Phase resets
+change neither. Therefore, throughout the walk,
+\begin{equation}\label{eq:rowenergybound}
+ \sum_i d_i^2=\mathcal E\le4096\|x\|^2\le4096n.
+\end{equation}
+This is an algebraic consequence of the chosen directions. It requires
+no extra term in the spectral potential and no additional progress
+estimate. It is used only before terminal rounding.
+
+\subsection{Which rows are evaluated}
+Let $\delta_0=\eta_0^5/2^{100}$ and set
+\begin{equation}\label{eq:screeningprecision}
+ \rho_c=\frac{\delta_0}{2^{22}(m_0+1)},\qquad
+ 2^{\ell_c}\ge\frac{36}{\rho_c},\qquad
+ C_c=a_0+b+\ell_c/\beta,
+\end{equation}
+where $\ell_c$ is the least nonnegative integer satisfying the displayed
+test. These are rational constructions. By \eqref{eq:rowpreprocess},
+$\ell_c,C_c=O(\log(2+n))$.
+A medium row has score
+\[
+ \chi_i=|d_i|+C_c r_i.
+\]
+If $\chi_i\le H_0$, then
+$u_{i\sigma}\le-\ell_c/\beta$ for both signs, so its normalized weights
+$a_{i\sigma}=36e^{\beta u_{i\sigma}}$ are at most $\rho_c$.
+It has no protected pair. A row is called cold if a certificate proves
+$\chi_i\le H_0$ at the current anchor; otherwise it is warm.
+
+Use hysteresis as follows. Refresh all current warm rows before a move;
+demote one only when $\chi_i\le H_0-2$. On checking a cold row, renew its
+certificate if $\chi_i\le H_0-1$, and otherwise promote it. Check a newly
+medium row once, with the latter rule. Expired certificates are processed
+before computing the direction. Section~\ref{sec:clock} gives the exact
+certificate and its expiration time.
+
+In numerical matrix formation, set cold weights to zero. Approximate all
+warm weights with total absolute error at most $\delta/2^{22}$.
+The sum of omitted cold weights is less than
+$2m_0\rho_c<\delta_0/2^{21}\le\delta/2^{21}$.
+Thus the total error remains below the original allowance
+$\delta/2^{20}$. The computed spectral kernel and curvature proxy are
+formed from warm weights. The flat test list consists of the coordinate
+vectors and the warm medium gradients. Large-row constraints, the exact
+row-energy constraint, and the $Q$ constraints are retained.
+
+\subsection{Cold rows do not spoil the larger finite steps}\label{sec:coldstep}
+It is essential to justify removing cold gradients from the flat test
+list: their unweighted directional derivatives need not satisfy the small
+$K$ bound. We use a comparison that only requires their tiny total weight.
+At a fixed anchor write the full true Gram contribution as
+$W=W_{\rm warm}+W_{\rm cold}$. For the analysis of this one move, define
+\[
+ M_{\rm fr}(t)=B+\eta\one\one^\T+W_{\rm cold}(0)+W_{\rm warm}(t).
+\]
+This is an analysis curve, not a matrix computed by the algorithm.
+At zero $M_{\rm fr}(0)=M(0)$, so its Perron eigenvector and gap are those
+of the full matrix. The fixed cold contribution is PSD and entrywise
+nonnegative. Every varying weight is warm and satisfies
+\eqref{eq:logcurve}; hence Lemma~\ref{lem:perron} applies to this curve.
+The coupled-response proof also applies: its Gram factor uses just the
+warm terms and is still dominated by the full anchor matrix.
+The proxy's diagonal comparison, spectral trace count, and numerical
+leakage bounds are unchanged. Omitting the cold derivatives introduces
+no derivative error relative to this particular frozen-cold curve.
+
+For a cold pair on a cube-contained move, the global gradient bound gives
+$|\beta g^\T h|\le5/32$. Also
+$|\ell''(t)|\le K^2/2\le1/2$ from the coordinate flatness, which holds
+for all rows. Consequently, for $|t|\le c_*=2^{-40}$,
+$|\ell(t)|\le(5/32)|t|+t^2/4<|t|/4$, and
+$|e^{\ell(t)}-1|\le|t|$. Summing the positive Gram factors gives
+\begin{equation}\label{eq:coldmotion}
+ \|M(t)-M_{\rm fr}(t)\|\le\frac{\delta_0}{2^{21}}|t|.
+\end{equation}
+The two spectral arguments lie below two on these steps, and
+$z\mapsto(z-1)_+^3$ is 3-Lipschitz there. Their spectral potentials
+therefore differ by at most $3\delta_0|t|/2^{21}$.
+The quadratic term $-\eta\|x+th\|^2$ is identical on both curves.
+
+Apply the frozen-cold version of \eqref{eq:potentialcurvature} and use
+the exact tangency $x_V^\T h=0$.
+The former first-order error and the additional term from
+\eqref{eq:coldmotion} are together at most
+$(2^{21}\delta/\eta)|t|$.
+The unchanged precision and step schedules give
+$2^{21}\delta/\eta\le\eta\tau/2^{16}$:
+use $\tau\ge2^{-41}\eta/H$, $\eta H<1$, and
+$\delta=\eta^5/2^{100}$.
+It follows that \eqref{eq:onestep} still holds for the original $\Phi$.
+Protected and warm unprotected barriers remain feasible by the old
+argument. A cold barrier starts below $-\ell_c/\beta$ and changes by at
+most $\|g\|\|h\||t|<|t|$, so it also stays feasible.
+
+The proof of Lemma~\ref{lem:budget} now applies unchanged to the original
+spectral potential and proves the same $L<L_*$ invariant.
+The step-count proof uses \eqref{eq:screenedflat} in place of
+\eqref{eq:flat} and still gives $O(SJ^2q^2)$ updates in a phase of size
+$S$. Thus there is no new acceptance hypothesis.
+
+Every refreshed warm row has $\chi_i>H_0-2$. Either
+$|d_i|>(H_0-2)/2$ or $C_cr_i>(H_0-2)/2$. Combining
+\eqref{eq:rowenergybound} and $\sum r_i^2\le\theta^2s$ gives
+\begin{equation}\label{eq:warmcount}
+ |\mathcal W|\le
+ \frac{16384n+4C_c^2\theta^2s}{(H_0-2)^2}
+ =O(n+s\log^2(2+n)).
+\end{equation}
+The local direction and progress arguments do not assume this row count;
+the separate algebraic energy invariant supplies it for the cost analysis.
+
+\subsection{The clock and its stronger path-length budget}\label{sec:clock}
+Maintain a rational clock $\vartheta$, initially zero, adding $|t|$ for
+every move $th$. It dominates path length because $\|h\|\le1/16$.
+If a row was certified at time $\vartheta_i$ with score $\chi_i$ and
+scale $r_i>0$, then while it remains cold,
+\[
+ \chi_i(\vartheta)\le\chi_i(\vartheta_i)
+                        +r_i(\vartheta_i)(\vartheta-\vartheta_i).
+\]
+Moves change its tracked sum at speed at most $\|b_i\|\le r_i$;
+cleanup preserves that sum and only lowers its scale. Store the rational
+expiration time
+\[
+ \vartheta_i^{\rm exp}
+ =\vartheta_i+\frac{H_0-\chi_i(\vartheta_i)}{r_i(\vartheta_i)}
+\]
+in a priority queue, with row-index tie breaking. An old key remains valid
+through support deletion or scale decrease. Completed rows leave the
+queue, and a row newly demoted from warm receives a new key.
+The hysteresis rules make every cold renewal leave at least one unit of
+score slack. If $r_i^{\rm ent}$ is its entry scale, successive due
+inspections are at least $1/r_i^{\rm ent}$ apart in clock time, including
+when an intervening warm period occurs.
+
+Our update bound improves the clock estimate needed here. In a phase of
+initial size $S$, exact $x^\T h=0$ and $\|h\|\ge1/32$ give
+$\sum t^2\le1024S$. There are $O(SJ^2q^2)$ moves in the phase.
+Cauchy--Schwarz, including short moves, therefore gives
+\begin{equation}\label{eq:clockbudget}
+ \sum_{\rm phase}|t|=O(SJq),\qquad
+ \Lambda:=\int d\vartheta=O(nJq),\qquad
+ \mathcal I:=\int s(\vartheta)\,d\vartheta=O(n^2Jq).
+\end{equation}
+Assign a drop in active dimension to the end of its move, so $s$ is
+nonincreasing along the clock.
+
+An inspection costs $O(s+\log(2+m_0))$. Its entry scale obeys
+$r_i^{\rm ent}\le\theta\|a_i\|_2$, whence
+$\sum_i r_i^{\rm ent}\le\theta\sqrt{m_0n}$.
+For two consecutive due inspections at times $v'<v''$,
+\[
+ s(v'')\le r_i^{\rm ent}\int_{v'}^{v''}s(v)\,dv.
+\]
+The intervals for a fixed row are disjoint. Charging first inspections
+separately and using \eqref{eq:clockbudget}, the total row-evaluation cost
+of due inspections is
+\begin{equation}\label{eq:inspectioncost}
+ O(m_0n)+\widetilde O(\sqrt{m_0}\,n^{5/2}).
+\end{equation}
+The queue work is smaller: its total is at most
+$\widetilde O(m_0+\sqrt{m_0}\,n^{3/2})$, plus support-event queue updates.
+Finally
+$\sqrt{m_0}\,n^{5/2}\le(m_0n^2+n^3)/2$,
+so \eqref{eq:inspectioncost} is absorbed into
+$\widetilde O(m_0n^2+n^3)$.
+
+\subsection{Maintaining row energy without scanning all rows}
+Row energy enters direction computation only through its gradient
+$2(Qx_V+u)$ and the quadratic form $Q$. Computing them from the maintained
+statistics costs $O(s^2)$ and requires no cold row evaluations.
+
+Initialize $Q$ by classical multiplication in $O(m_0n^2)$ operations;
+initially $u=0$. For a deliberate deletion of entry $a=b_{ij}$, let $b_i$
+and $c_i$ denote the old row and offset. The exact updates are
+\begin{align}\label{eq:statupdates}
+ Q'&=Q-a(e_jb_i^\T+b_ie_j^\T)+a^2e_je_j^\T,\notag\\
+ u'&=u+ax_jb_i-ac_ie_j-a^2x_je_j.
+\end{align}
+They cost $O(s)$. They follow by expanding the new retained row
+$b_i-ae_j$ and new offset $c_i+ax_j$.
+Freezing coordinate $j$, with $R=V\setminus\{j\}$, instead uses
+\[
+ Q'=Q_{R,R},\qquad u'=u_R+x_jQ_{R,j},\qquad
+ c_i'=c_i+b_{ij}x_j.
+\]
+Use the old $Q$ in this formula, and do not also apply
+\eqref{eq:statupdates} to the same freezing event.
+Store active coordinates in a packed list with their original labels.
+Swapping a frozen coordinate with the last active one and dropping that
+row and column costs $O(s)$ for the statistics, without copying the full
+principal submatrix. The corresponding row-record updates are included
+in the support scan. Tie breaking continues to use original column labels.
+The large-row diagonal $B$ is maintained at support events as well.
+
+There are at most $n$ freezing events and $m_0n$ deliberate deletions.
+At a freezing event one may simply scan all retained rows and recompute
+their masses and scales, costing at most $O(m_0n)$ for that event.
+Each deliberate deletion can be charged an $O(n)$ rescan and statistic
+update. Scale searches and queue changes have logarithmic cost.
+Thus all initialization, support maintenance, class changes, and forced
+row inspections together cost $\widetilde O(m_0n^2)$.
+After a move with no newly frozen coordinate, supports, masses, and scales
+are unchanged, so no all-row cleanup scan is performed.
+
+\subsection{Full screened procedure and operation count}
+Use the following finite implementation of the core algorithm.
+\begin{enumerate}
+\item Scan the original matrix and keep rows with $\ell_1$ norm greater
+than 66. Use the core's immediate returns when $m_0=0$ or $n\le512$.
+Initialize the row state, $Q,u$, clock, and queue;
+perform all initial cleanup with the statistic updates above.
+\item At each anchor, refresh current warm rows and process all expired
+cold certificates. Keep the large-row diagonal and statistics exact.
+Form all spectral approximants from warm weights only, with
+\eqref{eq:screeningprecision} and the stated warm error budget.
+\item Impose the core constraints, \eqref{eq:chargegradient}, and the
+computed high-$Q$ constraints. Form the negative basis and flatten just
+coordinate vectors and warm medium gradients. Use the same dyadic step
+schedule and full-or-boundary rule as the core algorithm, with the bound
+$k>s/400$.
+\item Advance the clock by the absolute step parameter. If coordinates
+have frozen, perform cleanup and update $Q,u,B$ and the row records.
+Apply the same stopping and phase-reset rules. The parameters
+$\delta_0,\rho_c,\ell_c,C_c$ stay fixed throughout the run.
+\item At $s\le512$, use the original conditional-expectation terminal
+rounding on the surviving input matrix, retaining every original column.
+\end{enumerate}
+All classification tests are exact rational score comparisons. The only
+transcendental approximations are the profile and exponential evaluations
+already specified in the core. The discrepancy proof is unchanged:
+the barriers, tracking identity, and terminal allowance use the same
+constants, and the screened implementation preserves their invariants.
+Discarded input rows satisfy the strict final bound because $66<C_*$.
+
+Let $w_s$ be the number of warm rows at a state. Excluding support events
+and due inspections, the field-operation cost per update is
+$\widetilde O(w_s s^2+s^3)$, including the additional diagonalization of
+$Q$. With fast primitives it is
+$\widetilde O(w_s s^{\omega-1}+s^\omega)$.
+By \eqref{eq:warmcount}, these are respectively
+$\widetilde O(ns^2+s^3)$ and
+$\widetilde O(ns^{\omega-1}+s^\omega)$.
+A phase starting at $S$ has $O(SJ^2q^2)$ updates. Summing its geometrically
+decreasing sizes gives total ordinary-update work
+$\widetilde O(n^4)$ in field arithmetic and
+$\widetilde O(n^{\omega+1})$ with fast primitives.
+Add the one-time input scan, support maintenance, and
+\eqref{eq:inspectioncost}. This proves
+\[
+ O(mn)+\widetilde O(n^4),\qquad
+ O(mn)+\widetilde O(m_0n^2+n^{\omega+1}),
+\]
+respectively, and completes Theorem~\ref{thm:main}.
+
+The term $m_0n^2$ is the remaining limitation for very tall inputs: the
+proof explicitly pays for initializing and maintaining the retained-row
+Gram statistics and support changes. We do not infer the stronger
+universal bound $O(mn)+\widetilde O(n^{\omega+1})$ from screening alone.
+For square input $m\le n$, that stronger expression does follow, because
+$m_0n^2\le n^3$ is absorbed by $n^{\omega+1}$.
+
+\begin{thebibliography}{9}
+\bibitem{project} E. Akbas and S. Sra, project draft, version of
+24 September 2026, especially the deterministic core and finite arithmetic
+appendix; an extended version is
+\nolinkurl{archive/algo-komlos-development.tex} in this repository; see
+also the algorithmic appendix of arXiv:2609.27172v1.
+\bibitem{core} E. Akbas and S. Sra, project note
+\emph{Perron preconditioning and phase regularization for spectral
+Koml\'os rounding}, 22 September 2026.
+\bibitem{Li} X. Li, \emph{Fast Spectral Signing for Vector Balancing},
+arXiv:2609.30044v1, 24 September 2026, Lemma 2.4 and Sections 4.3, 5, 9.
+\url{https://arxiv.org/html/2609.30044v1}.
+\end{thebibliography}
+\end{document}

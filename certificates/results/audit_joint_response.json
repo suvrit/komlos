@@ -1,0 +1,8 @@
+{
+  "noncommuting_inertia_examples": 300,
+  "minimum_joint_bound_margin": 0.6972890038612167,
+  "exact_supporting_line_checks": 101,
+  "exact_sharp_diagonal_case": true,
+  "finite_perron_curve_checks": 144,
+  "all_checks_passed": true
+}

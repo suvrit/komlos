@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering\small
+\caption{Final-profile comparison. Times include construction and output verification; ratios are paired medians relative to the original quadratic GSW configuration.}
+\label{tab:final-comparison}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Implementation & Time/GSW & Discrepancy range & Moves\\
+\midrule
+Quadratic, original GSW finish & 1.0000 & $[0.000,3.438]$ & $512$--$925$\\
+Quadratic, CE336 & 0.4012 & $[0.415,4.384]$ & $304$--$688$\\
+Below 67, CE336 & 0.4709 & $[0.415,4.384]$ & $304$--$688$\\
+Final 37.54, no input filter & 0.6029 & $[0.316,4.250]$ & $304$--$690$\\
+Final 37.54, input filter & 0.0022 & $[0.593,32.000]$ & $0$--$688$\\
+Final 37.54 + GSW, CE336 & 0.8750 & $[0.059,10.375]$ & $289$--$688$\\
+Eight proposals + interval check & 0.0016 & $[0.257,11.006]$ & $0$--$0$\\
+\bottomrule
+\end{tabular}
+\end{table}

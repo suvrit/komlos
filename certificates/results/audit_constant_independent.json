@@ -1,0 +1,16 @@
+{
+  "all_exact_checks_passed": true,
+  "constant_exact": "1877/50",
+  "profile_upper": 2.1555747867187396,
+  "initialization_relative_margin": 0.000992324074770956,
+  "joint_deposit_condition": 0.9998923998776472,
+  "dimension_fraction": 0.002576002920216151,
+  "terminal_discrepancy_squared": 1400.0,
+  "terminal_displacement_squared": 442.10526315789474,
+  "terminal_reserve": 21.03795294117647,
+  "proxy_norm_upper_bound": 38.831855093930635,
+  "normalized_witness_cut": "18/25",
+  "minimum_true_low_block_separation": "1/50",
+  "high_low_overlap_bound": "2^14 delta",
+  "gradient_unit_normalization": "(1-c) g = g/3"
+}

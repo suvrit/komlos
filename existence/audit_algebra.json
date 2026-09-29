@@ -1,0 +1,6 @@
+{
+  "logarithmic_derivative_numerator": "PASS",
+  "trigonometric_comparison_derivative": "PASS",
+  "zero_frequency_normalization": "PASS",
+  "hyperbolic_integral_differentiation": "PASS"
+}

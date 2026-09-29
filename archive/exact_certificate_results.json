@@ -1,0 +1,17 @@
+{
+  "all_exact_assertions_passed": true,
+  "profile_max_interval": [
+    "3.7160125846117742870308996452086257420974",
+    "3.7160125846117742870948263187237639348901"
+  ],
+  "initialization_exponent": 8.544644295302014,
+  "initialization_taylor_margin": 0.014172620220496993,
+  "dimension_fraction_after_all_budgets": 0.00533725675760368,
+  "required_dimension_fraction": 0.005,
+  "curvature_positive_fraction": 0.3460536999188062,
+  "barrier_height": 34.45,
+  "deletion_allowance": 32.50681420132403,
+  "discrepancy_constant": 66.95681420132404,
+  "terminal_movement_bound": 25.298221281347036,
+  "terminal_movement_reserve": 30.53665382639197
+}
